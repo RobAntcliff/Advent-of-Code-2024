@@ -9,8 +9,7 @@ class Day3
   
   def find_sum_of_mults(part1 = false)
     result = 0
-    input = File.read("day_3_input.txt")
-    matched_strings = input.scan(/mul\([0-9]+,[0-9]+\)|don't\(\)|do\(\)/)
+    matched_strings = File.read("day_3_input.txt").scan(/mul\([0-9]+,[0-9]+\)|don't\(\)|do\(\)/)
     mult_enabled = true
     matched_strings.each do |n|
       if n == "don't()"
