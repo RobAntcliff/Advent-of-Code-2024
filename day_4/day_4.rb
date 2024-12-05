@@ -77,17 +77,23 @@ class Day4
   end
 
   def is_x_mas(input, i, j)
-    valid_input = i - 1 >= 0 && i + 1 < input.length() && j - 1 >=0 && j + 1 < input[0].length()
     necessary_chars = ['M', 'S']
- 
-    if valid_input &&
-      input[i-1][j-1] != input[i+1][j+1] &&
-      (input[i-1][j-1] == input[i-1][j+1] || input[i-1][j-1] == input[i+1][j-1]) &&
-      (input[i+1][j+1] == input[i-1][j+1] || input[i+1][j+1] == input[i+1][j-1]) &&
-      (necessary_chars.include?(input[i-1][j-1])) &&
-      (necessary_chars.include?(input[i+1][j+1]))
 
-      return true
+    valid_input = i - 1 >= 0 && i + 1 < input.length() && j - 1 >=0 && j + 1 < input[0].length()
+
+    if valid_input
+      opposite_corners_not_equal = input[i-1][j-1] != input[i+1][j+1]
+      corner_1_has_pair_character = (input[i-1][j-1] == input[i-1][j+1] || input[i-1][j-1] == input[i+1][j-1])
+      corner_2_has_pair_character = (input[i+1][j+1] == input[i-1][j+1] || input[i+1][j+1] == input[i+1][j-1])
+      both_needed_characters_present = (necessary_chars.include?(input[i-1][j-1])) && (necessary_chars.include?(input[i+1][j+1]))
+
+      if opposite_corners_not_equal &&
+        corner_1_has_pair_character &&
+        corner_2_has_pair_character &&
+        both_needed_characters_present
+
+        return true
+      end
     end
 
     false
