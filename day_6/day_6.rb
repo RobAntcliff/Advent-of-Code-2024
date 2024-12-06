@@ -1,120 +1,56 @@
 class Day6
   class Guard
-    attr_accessor :x_pos, :y_pos, :no_of_positions, :direction, :out_of_bounds, :room, :possible_cyclical_options, :coords_to_check
+    attr_accessor :x_pos, :y_pos, :no_of_positions, :direction, :out_of_bounds, :room, :possible_cyclical_options, :obstacle_spots, :loop_found
 
     def initialize(x_pos, y_pos, direction, room)
       @x_pos = x_pos
       @y_pos = y_pos
-      @no_of_positions = 1
+      @no_of_positions = 0
       @direction = direction
       @out_of_bounds = false
       @room = room
       @possible_cyclical_options = 0
-      @coords_to_check = []
+      @obstacle_spots = {'N' => [], 'S' => [], 'E' => [], 'W' => []}
+      @loop_found = false
     end
-
-    
 
     def move
-      case @direction
-      when 'N'
-        if room[@y_pos - 1] == nil || room[@y_pos - 1][@x_pos] == nil
-          @out_of_bounds = true
-        elsif room[@y_pos - 1][@x_pos] == '#'
-          @direction = 'E'
-          if(@coords_to_check != nil && @coords_to_check.length == 3)
-            @coords_to_check.shift
-          end
-          @coords_to_check << [x_pos, y_pos]
-        else
-          if is_cyclical_spot(@coords_to_check, x_pos, y_pos)
-            puts "" + coords_to_check.join(', ') + ", " + x_pos.to_s + ", " + y_pos.to_s
-            @possible_cyclical_options += 1
-          end
-          unless room[@y_pos - 1][@x_pos] == 'X'
-            room[@y_pos - 1][@x_pos] = 'X'
-            @no_of_positions += 1
-          end
-          @y_pos -= 1
+      # Define movement deltas for each direction
+      deltas = {
+        'N' => [0, -1],
+        'E' => [1, 0],
+        'S' => [0, 1],
+        'W' => [-1, 0]
+      }
+      
+      # Define next direction when hitting obstacle
+      next_direction = {
+        'N' => 'E',
+        'E' => 'S',
+        'S' => 'W',
+        'W' => 'N'
+      }
+
+      dx, dy = deltas[@direction]
+      new_x = @x_pos + dx
+      new_y = @y_pos + dy
+
+      if new_y < 0 || new_y >= room.length || new_x < 0 || new_x >= room[new_y].length
+        @out_of_bounds = true
+      elsif room[new_y][new_x] == '#'
+        @direction = next_direction[@direction]
+        if @obstacle_spots[@direction].include?([new_x, new_y])
+          @loop_found = true
         end
-      when 'E'
-        if room[@y_pos][@x_pos + 1] == nil
-          @out_of_bounds = true
-        elsif room[@y_pos][@x_pos + 1] == '#'
-          @direction = 'S'
-          if(@coords_to_check != nil && @coords_to_check.length == 3)
-            @coords_to_check.shift
-          end
-          @coords_to_check << [x_pos, y_pos]
-        else
-          if is_cyclical_spot(@coords_to_check, x_pos, y_pos)
-            puts "" + coords_to_check.join(', ') + ", " + x_pos.to_s + ", " + y_pos.to_s
-            @possible_cyclical_options += 1
-          end
-          unless room[@y_pos][@x_pos + 1] == 'X'
-            room[@y_pos][@x_pos + 1] = 'X'
-            @no_of_positions += 1
-          end
-          @x_pos += 1
-        end
-      when 'S'
-        if room[@y_pos + 1] == nil
-          @out_of_bounds = true
-        elsif room[@y_pos + 1][@x_pos] == '#'
-          @direction = 'W'
-          if(@coords_to_check != nil && @coords_to_check.length == 3)
-            @coords_to_check.shift
-          end
-          @coords_to_check << [x_pos, y_pos]
-        else
-          if is_cyclical_spot(@coords_to_check, x_pos, y_pos)
-            puts "" + coords_to_check.join(', ') + ", " + x_pos.to_s + ", " + y_pos.to_s
-            @possible_cyclical_options += 1
-          end
-          unless room[@y_pos + 1][@x_pos] == 'X'
-            room[@y_pos + 1][@x_pos] = 'X'
-            @no_of_positions += 1
-          end
-          @y_pos += 1
-        end
-      when 'W'
-        if room[@y_pos][@x_pos - 1] == nil
-          @out_of_bounds = true
-        elsif room[@y_pos][@x_pos - 1] == '#'
-          @direction = 'N'
-          if(@coords_to_check != nil && @coords_to_check.length == 3)
-            @coords_to_check.shift
-          end
-          @coords_to_check << [x_pos, y_pos]
-        else
-          if is_cyclical_spot(@coords_to_check, x_pos, y_pos)
-            puts "" + coords_to_check.join(', ') + ", " + x_pos.to_s + ", " + y_pos.to_s
-            @possible_cyclical_options += 1
-          end
-          unless room[@y_pos][@x_pos - 1] == 'X'
-            room[@y_pos][@x_pos - 1] = 'X'
-            @no_of_positions += 1
-          end
-          @x_pos -= 1
-        end
+        @obstacle_spots[@direction] << [new_x, new_y]
       else
-        puts "Bro is lost"
+        unless room[new_y][new_x] == 'X'
+          room[new_y][new_x] = 'X'
+          @no_of_positions += 1
+        end
+        @x_pos = new_x
+        @y_pos = new_y
       end
-    end
-
-    def is_cyclical_spot(coords_to_check, curr_x, curr_y)
-      if coords_to_check != nil && coords_to_check.length == 3 && !coords_to_check.include?([curr_x, curr_y])
-        return is_rectangle(coords_to_check[0][0], coords_to_check[0][1], coords_to_check[1][0], coords_to_check[1][1], coords_to_check[2][0], coords_to_check[2][1], curr_x, curr_y)
-      end
-      false
-    end
-
-    def is_rectangle(x1, y1, x2, y2, x3, y3, x4, y4)
-      return is_orthogonal(x1, y1, x2, y2, x3, y3) && is_orthogonal(x2, y2, x3, y3, x4, y4) && is_orthogonal(x3, y3, x4, y4, x1, y1)
-    end
-  
-    def is_orthogonal(x1, y1, x2, y2, x3, y3)
-      return (x2 - x1) * (x2 - x3) + (y2 - y1) * (y2 - y3) == 0;
     end
   end
 
@@ -146,47 +82,65 @@ class Day6
     while(!@guard.out_of_bounds)
       @guard.move
     end
-
     return @guard.no_of_positions
   end
 
   def part_2
-    @guard_room = []
-    File.open("test_input.txt").each do |line|
-      @guard_room << line.chomp.chars
+    temp_guard_room = []
+    File.open("day_6_input.txt").each do |line|
+      temp_guard_room << line.chomp.chars
     end
 
-    @guard_room.each_with_index do |line, y|
+    guard_x = -1
+    guard_y = -1
+    guard_direction = ''
+
+    # Find guard starting position
+    temp_guard_room.each_with_index do |line, y|
       line.each_with_index do |loc, x|
-        if loc != '#' && loc != '.'
+        if loc != '#' && loc != '.' && loc != 'X'
+          guard_x = x
+          guard_y = y
           case loc
           when '^'
-            @guard = Guard.new(x, y, 'N', @guard_room)
+            guard_direction = 'N'
           when '>'
-            @guard = Guard.new(x, y, 'E', @guard_room)
+            guard_direction = 'E'
           when 'v'
-            @guard = Guard.new(x, y, 'S', @guard_room)
+            guard_direction = 'S'
           when '<'
-            @guard = Guard.new(x, y, 'W', @guard_room)
-          else
-            puts "Wtf is this bro? " + loc
+            guard_direction = 'W'
           end
         end
       end
     end
+    
+    cyclical_options = 0
+    tested_positions = 0
 
-    while(!@guard.out_of_bounds)
-      @guard.move
+    @guard_room.each_with_index do |line, y|
+      line.each_with_index do |val, x|
+        
+        tested_positions += 1
+        modified_guard_room = @guard_room.map(&:dup)
+        modified_guard_room[y][x] = '#'
+        
+        guard = Guard.new(guard_x, guard_y, guard_direction, modified_guard_room)
+        
+        while(!guard.out_of_bounds)
+          if guard.loop_found
+            cyclical_options += 1
+            break
+          end
+          guard.move
+        end
+      end
     end
 
-    return @guard.possible_cyclical_options
-
-    # Make a next obstacle function that tells you the next obstacle that would be hit and the direction you would move
-    # Then have a hashmap of the obstacles you've already hit and what direction you moved
-    # If the set contains the same obstacle and movement, you've found a loop
+    return cyclical_options
   end
 end
 
 day6 = Day6.new
-# puts day6.part_1
+puts day6.part_1
 puts day6.part_2
