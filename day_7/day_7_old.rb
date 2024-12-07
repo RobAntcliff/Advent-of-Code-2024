@@ -47,13 +47,9 @@ class Day7
 
 end
 
+start_time = Time.now
 day7 = Day7.new
-start_time = Time.now
 day7.part_1
-end_time = Time.now
-puts "Part 1 time taken: #{end_time - start_time} seconds"
-
-start_time = Time.now
 day7.part_2
 end_time = Time.now
-puts "Part 2 time taken: #{end_time - start_time} seconds"
+puts "Time taken: #{end_time - start_time} seconds"
