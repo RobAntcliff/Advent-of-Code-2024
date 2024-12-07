@@ -1,27 +1,21 @@
 class Day7
     def part_1
-        result = 0
-        File.open("day_7_input.txt").each do |line|
-            input_array = line.chomp.split(" ")
-            target_number = input_array[0].to_i
-            numbers = input_array[1..-1].map(&:to_i)
-            operations = operations = ['+', '*']
-            result += target_number if number_can_be_created(target_number, numbers, operations)
-        end
-        puts result
+        puts result_with_operations(['+', '*'])
     end
 
     def part_2
+        puts result_with_operations(['+', '*', '||'])
+    end
+
+    def result_with_operations(operations)
         result = 0
         File.open("day_7_input.txt").each do |line|
             input_array = line.chomp.split(" ")
             target_number = input_array[0].to_i
             numbers = input_array[1..-1].map(&:to_i)
-            operations = operations = ['+', '*', '||']
             result += target_number if number_can_be_created(target_number, numbers, operations)
-            puts line
         end
-        puts result
+        return result
     end
 
     def number_can_be_created(target_number, numbers, operations)
@@ -54,5 +48,5 @@ class Day7
 end
 
 day7 = Day7.new
-# day7.part_1
+day7.part_1
 day7.part_2
