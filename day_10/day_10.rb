@@ -9,8 +9,6 @@ def setup
         end.compact
     end.flatten(1)
 
-    valid_paths = 0;
-
     return input, start_positions
 end
 
