@@ -22,7 +22,6 @@ def part_2(part2 = true)
     valid_paths = 0
     start_positions.each do |start_position|
         if part2
-            
             valid_paths += valid_paths_from_position(input, start_position)
         else
             already_visited = Set.new
