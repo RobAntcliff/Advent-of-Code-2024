@@ -13,23 +13,21 @@ def setup
 end
 
 def part_1
-    input, start_positions = setup
-
-    valid_paths = 0
-    start_positions.each do |start_position|
-        already_visited = Set.new
-        valid_paths += valid_paths_from_position(input, start_position, already_visited)
-    end
-
-    puts valid_paths
+    part_2(false)
 end
 
-def part_2
+def part_2(part2 = true)
     input, start_positions = setup
 
     valid_paths = 0
     start_positions.each do |start_position|
-        valid_paths += valid_paths_from_position(input, start_position)
+        if part2
+            
+            valid_paths += valid_paths_from_position(input, start_position)
+        else
+            already_visited = Set.new
+            valid_paths += valid_paths_from_position(input, start_position, already_visited)
+        end
     end
 
     puts valid_paths
