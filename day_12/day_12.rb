@@ -13,7 +13,7 @@ def part_1
 end
 
 def part_2
-    input = File.read(File.join(__dir__, "blah.txt")).split("\n").map { |line| line.chars }
+    input = File.read(File.join(__dir__, "day_12_input.txt")).split("\n").map { |line| line.chars }
     
     total = 0
     already_visited = Set.new
@@ -22,8 +22,10 @@ def part_2
             current_blocks_visited = Set.new
             area, edges = valid_paths_from_position(input, [row_index, col_index], already_visited, current_blocks_visited)
             sides = get_sides(current_blocks_visited)
-            puts "Area: #{area}, Sides: #{sides}"
-            total += sides * area
+            if(area != 0 || sides != 0)
+                #puts "Area: #{area}, Sides: #{sides}"
+                total += sides * area
+            end
         end
     end
     puts "Total: #{total}"
@@ -71,9 +73,16 @@ DIRECTION_TO_RIGHT_SIDE = {
   [0, 1] => [1, 0]    # North -> East
 }
 
+DIRECTION_TO_LEFT_SIDE = {
+  [1, 0] => [0, 1],  # East -> North
+  [0, 1] => [-1, 0], # North -> West
+  [-1, 0] => [0, -1], # West -> South
+  [0, -1] => [1, 0]   # South -> East
+}
+
 def get_sides(blocks_visited)
-    puts "\nBlock visualization:"
-    print_blocks(blocks_visited)
+    # puts "\nBlock visualization:"
+    # print_blocks(blocks_visited)
     sides = 0
 
     block_map = {}
@@ -88,92 +97,94 @@ def get_sides(blocks_visited)
     end
     
     directions = [[1, 0], [-1, 0], [0, 1], [0, -1]]
+    direction = [1, 0]
     blocks_visited.each do |block|
-        directions.each do |direction|
-            # Skip over the direction if it has already been checked for this block
-            if(block_map[block][direction])
-                puts "Skipping #{block} #{direction} because it has already been checked"
-                next
-            else
-                # Set that we've seen this direction for this block
-                block_map[block][direction] = true
-            end
+        # Skip over the direction if it has already been checked for this block
+        if(block_map[block][direction])
+            # puts "Skipping #{block} #{direction} because it has already been checked"
+            next
+        else
+            # Set that we've seen this direction for this block
+            block_map[block][direction] = true
+        end
 
-            right_side_check = DIRECTION_TO_RIGHT_SIDE[direction]
-            # If there's no block to the right side, we've found a side
-            right_hand_block_to_check = [block[0] + right_side_check[0], block[1] + right_side_check[1]]
-            unless(blocks_visited.include?(right_hand_block_to_check))
-                # We've found a side
-                sides += 1
+        right_side_check = DIRECTION_TO_RIGHT_SIDE[direction]
+        # If there's no block to the right side, we've found a side
+        right_hand_block_to_check = [block[0] + right_side_check[0], block[1] + right_side_check[1]]
+        blocks_and_directions_this_cycle = {}
+        unless(blocks_visited.include?(right_hand_block_to_check))
+            # We've found a side
+            # Set that we've seen this direction for this block
+            block_map[block][direction] = true
+            #puts "Found a side for block #{block} in direction #{direction}"
+            
 
-                # Set that we've seen this direction for this block
-                block_map[block][direction] = true
-                puts "Found a side for block #{block} in direction #{direction}"
+            current_block = block
+            current_direction = direction
+            continue_down_forward_path = true
+            
+            # Follow the sides, keeping track of the turns
+            while continue_down_forward_path
+                blocks_and_directions_this_cycle[[current_block, current_direction]] = true
+                # puts "\nCurrent position: #{current_block}, Current direction: #{current_direction}"
+                # print_blocks(blocks_visited, current_block)
+                # puts "sides: #{sides}"
                 
-
-
-                current_block = block
-                continue_down_forward_path = true
-                # Keep checking blocks in the direction until we find a block that has already been visited or can't continue in a direction
-                while continue_down_forward_path
-                    block_map[current_block][direction] = true
-                    # check if the block has a side in the direction
-                    right_side_check = DIRECTION_TO_RIGHT_SIDE[direction]
-                    # Don't continue if the block in the right side direction exists, because that means it's a side
-                    right_side_to_check = [current_block[0] + right_side_check[0], current_block[1] + right_side_check[1]]
-                    if blocks_visited.include?(right_side_to_check)
-                        continue_down_forward_path = false
-                    end
-
-                    # Continue down the path if the block in the direction exists
-                    forward_direction_to_check = [current_block[0] + direction[0], current_block[1] + direction[1]]
-                    if blocks_visited.include?(forward_direction_to_check)
-                        current_block = forward_direction_to_check
-                    else
-                        continue_down_forward_path = false
-                    end
+                block_map[current_block][current_direction] = true
+                # check if the block has a side in the direction
+                right_side_check = DIRECTION_TO_RIGHT_SIDE[current_direction]
+                right_side_to_check = [current_block[0] + right_side_check[0], current_block[1] + right_side_check[1]]
+                # If the right side exists, we've found a turn
+                if blocks_visited.include?(right_side_to_check)
+                    current_direction = right_side_check
+                    sides += 1
                 end
-
-                current_block = block
-                continue_down_backward_path = true
-                backwards_direction = direction.map { |d| -d }
-
                 # Continue down the path if the block in the direction exists
-                backward_direction_to_check = [current_block[0] + backwards_direction[0], current_block[1] + backwards_direction[1]]
-                if blocks_visited.include?(backward_direction_to_check)
-                    current_block = backward_direction_to_check
+                forward_direction_to_check = [current_block[0] + current_direction[0], current_block[1] + current_direction[1]]
+                if blocks_visited.include?(forward_direction_to_check)
+                    current_block = forward_direction_to_check
                 else
-                    continue_down_backward_path = false
-                end
-                # Keep checking blocks in the direction until we find a block that has already been visited or can't continue in a direction
-                while continue_down_backward_path
-                    block_map[current_block][backwards_direction] = true
-                    # check if the block has a side in the direction
-                    right_side_check = DIRECTION_TO_RIGHT_SIDE[direction]
-                    # Don't continue if the block in the right side direction exists, because that means it's a side
-                    right_side_to_check = [current_block[0] + right_side_check[0], current_block[1] + right_side_check[1]]
-                    if blocks_visited.include?(right_side_to_check)
-                        continue_down_backward_path = false
+                    count = 0
+                    #turn anti-clockwise
+                    while count < 4
+                        current_direction = DIRECTION_TO_LEFT_SIDE[current_direction]
+                        #puts "current direction: #{current_direction}"
+                        sides += 1
+                        count += 1
+                        forward_direction_to_check = [current_block[0] + current_direction[0], current_block[1] + current_direction[1]]
+                        if blocks_and_directions_this_cycle[[current_block, current_direction]]
+                            continue_down_forward_path = false
+                            break
+                        end
+                        blocks_and_directions_this_cycle[[current_block, current_direction]] = true
+                        if blocks_visited.include?(forward_direction_to_check)
+                            current_block = forward_direction_to_check
+                            break
+                        end
                     end
+                end
 
-                    # Continue down the path if the block in the direction exists
-                    backward_direction_to_check = [current_block[0] + backwards_direction[0], current_block[1] + backwards_direction[1]]
-                    if blocks_visited.include?(backward_direction_to_check)
-                        current_block = backward_direction_to_check
-                    else
-                        continue_down_backward_path = false
-                    end
+                if blocks_and_directions_this_cycle[[current_block, current_direction]]
+                    continue_down_forward_path = false
                 end
-            else
-                puts "No side for block #{block} in direction #{direction}"
             end
+
+            #puts "End Total sides: #{sides}"
+        else
+            #puts "No side for block #{block} in direction #{direction}"
+        end
+
+        blocks_and_directions_this_cycle.each do |block_and_direction, _value|
+            temp_block = block_and_direction[0]  # Get the block from the array
+            temp_direction = block_and_direction[1]  # Get the direction from the array
+            block_map[temp_block][temp_direction] = true
         end
     end
 
     sides
 end
 
-def print_blocks(blocks_visited)
+def print_blocks(blocks_visited, current_position = nil)
     return if blocks_visited.empty?
     
     # Find the boundaries
@@ -185,10 +196,12 @@ def print_blocks(blocks_visited)
     # Print the grid
     (min_row..max_row).each do |row|
         (min_col..max_col).each do |col|
-            if blocks_visited.include?([row, col])
-                print "█"  # or use "■" if you prefer
+            if current_position && current_position == [row, col]
+                print "X"  # Highlight current position
+            elsif blocks_visited.include?([row, col])
+                print "█"  # Regular visited blocks
             else
-                print "·"  # or use " " for empty space
+                print "·"  # Empty space
             end
         end
         puts  # new line after each row
