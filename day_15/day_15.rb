@@ -30,21 +30,48 @@ class Day_15
 
   def part_2
     @@warehouse = []
-    robot, moves, boxes = get_robot_and_robot_movement("test_small_input.txt", true)
+    robot, moves, boxes = get_robot_and_robot_movement("day_15_input.txt", true)
+    # @@warehouse.each do |row|
+    #   puts row.join
+    # end
+    # puts moves
+
+    moves.each_char.with_index do |move, i|
+      robot.move(move)
+      # if i >= 1255
+      #   puts "Move #{move} - #{robot.x_pos} #{robot.y_pos}"
+      #   @@warehouse.each do |row|
+      #     puts row.join
+      #   end
+      #   puts "--------"
+      # end
+      # boxes.each do |box|
+      #   if box.left_box == box
+      #     if(box.right_box.y_pos != box.y_pos || box.right_box.x_pos != box.x_pos + 1)
+      #       puts "Blah"
+      #       puts "Move #{move} - #{robot.x_pos} #{robot.y_pos}"
+      #       @@warehouse.each do |row|
+      #         puts row.join
+      #       end
+      #       puts "--------"
+      #       gets
+      #     end
+      #   end
+      # end
+      # puts "Move #{move} - #{robot.x_pos} #{robot.y_pos}"
+      # @@warehouse.each do |row|
+      #   puts row.join
+      # end
+      # puts "Iteration #{i}"
+      # puts "--------"
+    
+      # gets
+    end
+
     @@warehouse.each do |row|
       puts row.join
     end
-    puts moves
-
-    moves.each_char do |move|
-      robot.move(move)
-      puts "Move #{move} - #{robot.x_pos} #{robot.y_pos}"
-      @@warehouse.each do |row|
-        puts row.join
-      end
-      puts "--------"
-    gets
-    end
+    puts "--------"
 
     result = 0
     boxes.each do |box|
@@ -107,9 +134,7 @@ class Day_15
       right_box.left_box = self if right_box
     end
 
-    def big_move(move)
-      # if the box is big, we need to check if we can move both the left and right side of the box
-
+    def do_move(move)
       directions = {
         ">" => [1, 0],
         "<" => [-1, 0],
@@ -121,6 +146,14 @@ class Day_15
       if move == ">"
         if @left_box == self && @right_box.big_move(move)
           can_move_horizontally = true
+        else
+          if Day_15.warehouse[y_pos + directions[move][1]][x_pos + directions[move][0]].is_a?(Box)
+            can_move_horizontally = Day_15.warehouse[y_pos + directions[move][1]][x_pos + directions[move][0]].big_move(move)
+          elsif Day_15.warehouse[y_pos + directions[move][1]][x_pos + directions[move][0]] == "#"
+            can_move_horizontally = false
+          else
+            can_move_horizontally = true
+          end
         end
       elsif move == "<"
         if @right_box == self && @left_box.big_move(move)
@@ -139,18 +172,25 @@ class Day_15
       # check if box can move vertically
       can_move_vertically = false
       if(move == "^" || move == "v")
-        if Day_15.warehouse[left_box.y_pos + directions[move][1]][left_box.x_pos + directions[move][0]].is_a?(Box) || Day_15.warehouse[right_box.y_pos + directions[move][1]][right_box.x_pos + directions[move][0]].is_a?(Box)
-          if Day_15.warehouse[left_box.y_pos + directions[move][1]][left_box.x_pos + directions[move][0]].is_a?(Box)
-            can_move_vertically = Day_15.warehouse[left_box.y_pos + directions[move][1]][left_box.x_pos + directions[move][0]].big_move(move)
-          end
-
-          if Day_15.warehouse[right_box.y_pos + directions[move][1]][right_box.x_pos + directions[move][0]].is_a?(Box)
-            can_move_vertically = Day_15.warehouse[right_box.y_pos + directions[move][1]][right_box.x_pos + directions[move][0]].big_move(move)
-          end
-        elsif Day_15.warehouse[@left_box.y_pos + directions[move][1]][@left_box.x_pos + directions[move][0]] == "#" || Day_15.warehouse[@right_box.y_pos + directions[move][1]][@right_box.x_pos + directions[move][0]] == "#"
+        if Day_15.warehouse[@left_box.y_pos + directions[move][1]][@left_box.x_pos + directions[move][0]] == "#" || Day_15.warehouse[@right_box.y_pos + directions[move][1]][@right_box.x_pos + directions[move][0]] == "#"
           can_move_vertically = false
         elsif Day_15.warehouse[@left_box.y_pos + directions[move][1]][@left_box.x_pos + directions[move][0]] == "." && Day_15.warehouse[@right_box.y_pos + directions[move][1]][@right_box.x_pos + directions[move][0]] == "."
           can_move_vertically = true
+        elsif Day_15.warehouse[left_box.y_pos + directions[move][1]][left_box.x_pos + directions[move][0]].is_a?(Box) || Day_15.warehouse[right_box.y_pos + directions[move][1]][right_box.x_pos + directions[move][0]].is_a?(Box)
+          box_left = Day_15.warehouse[left_box.y_pos + directions[move][1]][left_box.x_pos + directions[move][0]]
+          box_right = Day_15.warehouse[right_box.y_pos + directions[move][1]][right_box.x_pos + directions[move][0]]
+          
+          if(box_left.is_a?(Box) && box_right.is_a?(Box))
+            if(box_left.left_box == box_right.left_box && box_left.right_box == box_right.right_box)
+              can_move_vertically = box_left.big_move(move)
+            else
+              can_move_vertically = box_left.big_move(move) && box_right.big_move(move)
+            end
+          elsif box_left.is_a?(Box)
+            can_move_vertically = box_left.big_move(move)
+          elsif box_right.is_a?(Box)
+            can_move_vertically = box_right.big_move(move)
+          end
         end
       end
 
@@ -169,7 +209,14 @@ class Day_15
         @y_pos += directions[move][1]
         Day_15.warehouse[y_pos][x_pos] = self
       end
+      
       return can_move_horizontally || can_move_vertically
+    end
+
+    def big_move(move)
+      if can_move(move)
+        do_move(move)
+      end
     end
 
     def can_move(move)
@@ -179,7 +226,60 @@ class Day_15
         "^" => [0, -1],
         "v" => [0, 1]
       }
-      return Day_15.warehouse[y_pos + directions[move][1]][x_pos + directions[move][0]].is_a?(Box)
+      # check if box can move horizontally
+      can_move_horizontally = false
+      if move == ">"
+        if @left_box == self && @right_box.can_move(move)
+          can_move_horizontally = true
+        else
+          if Day_15.warehouse[y_pos + directions[move][1]][x_pos + directions[move][0]].is_a?(Box)
+            can_move_horizontally = Day_15.warehouse[y_pos + directions[move][1]][x_pos + directions[move][0]].can_move(move)
+          elsif Day_15.warehouse[y_pos + directions[move][1]][x_pos + directions[move][0]] == "#"
+            can_move_horizontally = false
+          else
+            can_move_horizontally = true
+          end
+        end
+      elsif move == "<"
+        if @right_box == self && @left_box.can_move(move)
+          can_move_horizontally = true
+        else
+          if Day_15.warehouse[y_pos + directions[move][1]][x_pos + directions[move][0]].is_a?(Box)
+            can_move_horizontally = Day_15.warehouse[y_pos + directions[move][1]][x_pos + directions[move][0]].can_move(move)
+          elsif Day_15.warehouse[y_pos + directions[move][1]][x_pos + directions[move][0]] == "#"
+            can_move_horizontally = false
+          else
+            can_move_horizontally = true
+          end
+        end
+      end
+
+      # check if box can move vertically
+      can_move_vertically = false
+      if(move == "^" || move == "v")
+        if Day_15.warehouse[@left_box.y_pos + directions[move][1]][@left_box.x_pos + directions[move][0]] == "#" || Day_15.warehouse[@right_box.y_pos + directions[move][1]][@right_box.x_pos + directions[move][0]] == "#"
+          can_move_vertically = false
+        elsif Day_15.warehouse[@left_box.y_pos + directions[move][1]][@left_box.x_pos + directions[move][0]] == "." && Day_15.warehouse[@right_box.y_pos + directions[move][1]][@right_box.x_pos + directions[move][0]] == "."
+          can_move_vertically = true
+        elsif Day_15.warehouse[left_box.y_pos + directions[move][1]][left_box.x_pos + directions[move][0]].is_a?(Box) || Day_15.warehouse[right_box.y_pos + directions[move][1]][right_box.x_pos + directions[move][0]].is_a?(Box)
+          box_left = Day_15.warehouse[left_box.y_pos + directions[move][1]][left_box.x_pos + directions[move][0]]
+          box_right = Day_15.warehouse[right_box.y_pos + directions[move][1]][right_box.x_pos + directions[move][0]]
+          
+          if(box_left.is_a?(Box) && box_right.is_a?(Box))
+            if(box_left.left_box == box_right.left_box && box_left.right_box == box_right.right_box)
+              can_move_vertically = box_left.can_move(move)
+            else
+              can_move_vertically = box_left.can_move(move) && box_right.can_move(move)
+            end
+          elsif box_left.is_a?(Box)
+            can_move_vertically = box_left.can_move(move)
+          elsif box_right.is_a?(Box)
+            can_move_vertically = box_right.can_move(move)
+          end
+        end
+      end
+
+      return can_move_horizontally || can_move_vertically
     end
 
     def move(move)
@@ -216,7 +316,13 @@ class Day_15
     end
 
     def get_coordinate_value
-      return (y_pos * 100) + x_pos
+      if @is_big && @left_box == self
+        return (y_pos * 100) + x_pos
+      elsif !@is_big
+        return (y_pos * 100) + x_pos
+      else
+        return 0
+      end
     end
 
     def to_s
