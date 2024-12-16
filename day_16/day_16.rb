@@ -7,7 +7,7 @@ def part_1
   end_coordinates = input.each_with_index.find { |line, index| line.include?('E') }
   end_coordinates = [end_coordinates[1], end_coordinates[0].index('E')] if end_coordinates
   shortest_cost = shortest_cost(end_coordinates, start_coordinates, input)
-  puts shortest_cost
+  puts shortest_cost + 1000
 end
 
 def shortest_cost(start_coordinates, end_coordinates, input)
