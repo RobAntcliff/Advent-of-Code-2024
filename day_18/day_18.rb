@@ -30,7 +30,15 @@ def part_2
     coords_set.add(coord)
   end
 
-  result = get_shortest_distance([0, 0], [70, 70],coords_set)
+  result = nil
+  coordinates[1024..].each do |coord|
+    coords_set.add(coord)
+    result = get_shortest_distance([0, 0], [70, 70],coords_set)
+    if result == nil
+      result = coord.inspect
+      break
+    end
+  end
   puts result
 end
 
@@ -63,4 +71,4 @@ def get_shortest_distance(starting_point, ending_point, coords_set)
   return nil
 end
 
-part_1
+part_2
